@@ -6,7 +6,7 @@ const handleError = error => {
   }
 };
 
-const init = () => {
+const setupTextChat = session => {
   // =============== Setup text chat ===============
   const form = document.querySelector( 'form' );
   const msgTxt = document.querySelector( '#msgTxt' );
@@ -27,6 +27,9 @@ const init = () => {
     } );
   } );
   // =============== Setup text chat ===============
+}
+
+const init = () => {
 
   // Set initial states for archiving buttons
   document.querySelector( '#start' ).classList.remove( 'hide' );
@@ -41,7 +44,13 @@ const init = () => {
       .then( json => {
         const { apiKey, sessionId, token } = json;
 
-        initializeSession( { apiKey, sessionId, token } );
+        if ( !apiKey || !sessionId && !token ) return;
+
+        const session = OT.initSession( apiKey, sessionId );
+
+        setupTextChat( session );
+
+        setupFeatures( { session, token } );
       } ).catch( error => {
         handleError(error);
         alert('Failed to get opentok sessionId and token. Make sure you have updated the config.js file.');
@@ -50,11 +59,9 @@ const init = () => {
   }
 }
 
-const initializeSession = ( args = {} ) => {
-  const { apiKey, sessionId, token } = args;
-  if ( !apiKey || !sessionId && !token ) return;
-
-  const session = OT.initSession( apiKey, sessionId );
+// Setup subscribers, publishers, archiving, signaling
+const setupFeatures = ( args = {} ) => {
+  const { session, token } = args;
 
   // Subscribe to a newly created stream
   session.on( 'streamCreated', event => {
