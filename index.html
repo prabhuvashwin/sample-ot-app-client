@@ -1,41 +1,97 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title> Sample Web Client App </title>
-  <link href="css/app.css" rel="stylesheet" type="text/css">
+  <head>
+    <title> Sample Web Client App </title>
+    <link href="css/index.css" rel="stylesheet" type="text/css" charset="utf-8">
 
-  <script src="https://static.opentok.com/v2/js/opentok.min.js"></script>
+    <script src="https://static.opentok.com/v2/js/opentok.min.js"></script>
 
-  <!-- Polyfill for fetch API so that we can fetch the sessionId and token in IE11 -->
-  <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js" charset="utf-8"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js" charset="utf-8"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-</head>
+    <!-- Polyfill for fetch API so that we can fetch the sessionId and token in IE11 -->
+    <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
+  </head>
 
-<body>
-  <div id="videos">
-    <div id="subscriber"></div>
-    <div id="publisher"></div>
-  </div>
-
-  <div id="buttonholder">
-    <div id="buttons">
-      <button type="button" id="start" onClick="javascript:startArchive()" class="btn btn-danger">Start Archive</button>
-      <button type="button" id="stop" onClick="javascript:stopArchive()" class="btn btn-danger">Stop Archive</button>
-      <button type="button" id="view" onClick="javascript:viewArchive()" class="btn btn-danger" disabled>View Archive</button>
+  <body>
+    <div class="login-container">
+      <h1>Welcome to the Video Chat App</h1>
+      <span>
+        How would you like to join the session? (As a <strong><i>Host</i></strong>, as a <strong><i>Guest</i></strong>, as a <strong><i>Viewer</i></strong>)
+      </span>
+      <span>Default selection is: <strong><i>Host</i></strong></span>
+      <br />
+      <div class="line bottom"></div>
+      <div class="line top"></div>
+      <br />
+      <section class="formrow">
+        <div class="form-section">
+          <input id="name" placeholder="Enter your name:" value="">
+          <span class="combobox withtextlist">
+            <input id="role" value="Host" readonly>
+            <span tabindex="-1" class="downarrow"></span>
+            <select size="4" class="sticky">
+              <option>Host</option>
+              <option>Guest</option>
+              <option>Viewer</option>
+            </select>
+          </span>
+        </div>
+      </section>
+      <button id="myButton" class="button" onClick="javascript:onSubmit()">Join</button>
     </div>
-  </div>
+    <div class="home-container hide">
+      <div id="videos">
+        <div id="layout">
+          <div id="subscriber"></div>
+        </div>
+        <div id="publisher" class="hide"></div>
+      </div>
+  
+      <div id="textchat">
+        <p id="history"></p>
+        <form>
+          <input type="text" placeholder="Input your text here" id="msgTxt"></input>
+        </form>
+      </div>
+  
+      <div id="controls">
+        <div id="archiveButtons">
+          <button type="button" id="start" onClick="javascript:startArchive()" class="button">Start Archive</button>
+          <button type="button" id="stop" onClick="javascript:stopArchive()" class="button">Stop Archive</button>
+          <button type="button" id="view" onClick="javascript:viewArchive()" class="button" disabled>View Archive</button>
+        </div>
+        <div id="broadcastButtons">
+          <button type="button" id="bStart" onClick="javascript:startBroadcast()" class="button">Start Broadcast</button>
+          <button type="button" id="bStop" onClick="javascript:stopBroadcast()" class="button" disabled>Stop Broadcast</button>
+        </div>
+        <div id="publisherButtons">
+          <button type="button" id="pShow" onClick="javascript:showPublisher()" class="button" disabled>Show Publisher</button>
+          <button type="button" id="pHide" onClick="javascript:hidePublisher()" class="button">Hide Publisher</button>
+          <button type="button" id="startVideo" onClick="javascript:startPublishingVideo()" class="button" disabled>Start Video</button>
+          <button type="button" id="stopVideo" onClick="javascript:stopPublishingVideo()" class="button">Stop Video</button>
+          <button type="button" id="startAudio" onClick="javascript:startPublishingAudio()" class="button" disabled>Start Audio</button>
+          <button type="button" id="stopAudio" onClick="javascript:stopPublishingAudio()" class="button">Stop Audio</button>
+        </div>
+      </div>
+    </div>
 
-  <div id="textchat">
-    <p id="history"></p>
-    <form>
-      <input type="text" placeholder="Input your text here" id="msgTxt"></input>
-    </form>
-  </div>
+    <script src="lib/opentok-layout.min.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script>
+      const parentComboBox = el => {
+        for ( el = el.parentNode; el != null && Array.prototype.indexOf.call( el.classList, "combobox" ) <= -1; ) {
+          el = el.parentNode;
+        }
+        return el;
+      }
 
-  <script type="text/javascript" src="js/config.js"></script>
-  <script type="text/javascript" src="js/app.js"></script>
-</body>
+      $( ".combobox.withtextlist > select" ).change( function() { 
+        const textbox = parentComboBox( this ).firstElementChild;
+        textbox.value = this[this.selectedIndex].text;
+      } );
+    </script>
+  </body>
 
 </html>

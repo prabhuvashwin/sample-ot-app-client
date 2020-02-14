@@ -1,0 +1,261 @@
+  
+body, html {
+  background-color: #aef0f4;
+  height: 90%;
+}
+
+.login-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-container {
+  width: 100%;
+  height: 100%;
+}
+
+.line {
+  width: 90%;
+  height: 8px;
+}
+
+.line.top {
+  border-top: 3px solid black;
+  border-radius: 10px;
+}
+
+.line.bottom {
+  border-bottom: 3px solid black;
+  border-radius: 10px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.combobox {
+  position: relative;
+  display: inline-block;
+  outline: none;
+  border: 1px solid #999;
+  padding-right: 1.25em;
+  margin: 5px;
+}
+
+.downarrow {
+  outline: none;
+}
+
+.combobox > input {
+  border: 0;
+  padding: 5px;
+}
+
+.combobox > *:last-child {
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  outline: none;
+  transition: 0.4s;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  border: 1px solid #888;
+  background-color: #fff;
+  box-shadow: 1px 2px 4px 1px #666;
+  box-shadow: 1px 2px 4px 1px #4448;
+  z-index: 9999;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+.combobox > .downarrow {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1.25em;
+
+  cursor: default;
+  nav-index: -1;
+
+  border-width: 0px;
+  border-style: inherit;
+  border-color: inherit;
+}
+
+.combobox > .downarrow:focus ~ *:last-child,
+.combobox > .sticky:last-child:hover {
+  display: block;
+  opacity: 1;
+  transition: 0.15s;
+  pointer-events: auto;
+}
+
+.downarrow:empty::before {
+  content: '▾';
+  /* content: '⌄'; */
+  /* content: 'v'; */
+}
+
+.downarrow::before, .downarrow > *:only-child {
+  text-align: center;
+  position: relative;
+  top: 50%;
+  display: block;
+  transform: translateY(-50%);
+}
+
+#name {
+  padding: 5px;
+  outline: none;
+}
+
+.hide {
+  display: none;
+}
+
+#videos {
+  position: relative;
+  width: 70%;
+  height: 100%;
+  float: left;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#layout {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* width: 320px;
+  height: 240px;
+  background-color: #DDD;
+  position:relative; */
+}
+
+#subscriber {
+  display: flex;
+  flex-direction: row;
+  left: 0;
+  top: 0;
+  z-index: 11;
+}
+
+#publisher {
+  position: absolute;
+  width: 360px;
+  height: 240px;
+  bottom: 10px;
+  left: 10px;
+  z-index: 100;
+  border: 3px dotted white;
+  border-radius: 3px;
+}
+
+/* #buttonholder {
+  position: absolute;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: 7em;
+  left: 18em;
+  z-index: 200;
+} */
+
+#textchat {
+  position: relative;
+  width: 20%;
+  float: left;
+  margin-left: 10px;
+  height: inherit;
+}
+
+#history {
+  background-color: #333;
+  height: calc( 100% - 40px );
+  overflow: auto;
+  margin-top: 0;
+  margin-bottom: 2px;
+  padding: 1px 10px;
+}
+
+#history .mine {
+  color: #00FF00;
+}
+
+#history .theirs {
+  color: #00FFFF;
+}
+
+input#msgTxt {
+  outline: none;
+  height: 30px;
+  border: 1px solid green;
+  border-radius: 15px;
+  transition: all 0.51s;
+  width: 97%;
+  padding: 2px;
+  font-size: medium;
+}
+
+input#msgTxt:focus-within {
+  border-radius: 0;
+}
+
+#controls {
+  width: 65%;
+  height: 15%;
+  padding: 10px;
+  float: left;
+  margin-top: 5px;
+  border: 3px solid black;
+}
+
+.button {
+  display: inline-block;
+  outline: none;
+  padding: 0.2em 1.45em;
+  margin: 0.1em;
+  border: 0.15em solid darkgreen;
+  border-radius: 15px;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  font-weight: 400;
+  color: darkgreen;
+  background-color: #ccc;
+  text-align: center;
+  position: relative;
+  transition: all 0.51s;
+  height: 30px;
+}
+
+.button:hover {
+  cursor: pointer;
+  border-radius: 0;
+  background-color: #fff;
+  color: orange;
+  border-color: orange;
+}
+
+.button:active {
+  background-color: #999;
+}
+
+.button:disabled {
+  color: rgb(150, 150, 150);
+  pointer-events: none;
+  cursor: not-allowed;
+  border-color: #ccc;
+}
+
+#broadcastButtons, #publisherButtons {
+  margin-top: 5px;
+}
