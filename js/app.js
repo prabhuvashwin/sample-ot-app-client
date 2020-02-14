@@ -165,6 +165,12 @@ const setupFeatures = ( args = {} ) => {
     } );
   }
   else {
+    document.querySelector( '#pShow' ).disabled = true;
+    document.querySelector( '#pHide' ).disabled = true;
+    document.querySelector( '#startVideo' ).disabled = true;
+    document.querySelector( '#stopVideo' ).disabled = true;
+    document.querySelector( '#startAudio' ).disabled = true;
+    document.querySelector( '#stopAudio' ).disabled = true;
     // Connect to the session
     session.connect( token, error => {
       if ( error ) {
