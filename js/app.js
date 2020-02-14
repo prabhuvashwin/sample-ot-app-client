@@ -46,6 +46,27 @@ const setupTextChat = session => {
   // =============== Setup text chat ===============
 }
 
+updateStreams = session => {
+  const connectionList = document.querySelector( '#connectionList' );
+  session.on( 'connectionCreated', event => {
+    const { connections } = event;
+    const conn = document.createElement( 'span' );
+    conn.textContent = `${connections[0].data} joined`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+
+  session.on( 'connectionDestroyed', event => {
+    const { connections } = event;
+    const conn = document.createElement( 'span' );
+    conn.textContent = `${connections[0].data} left`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+}
+
 const init = () => {
 
   // Set initial states for archiving buttons
@@ -56,7 +77,7 @@ const init = () => {
 
   // Get apiKey, sessionId, token info and initialize session
   if ( SAMPLE_SERVER_BASE_URL ) {
-    fetch( `${SAMPLE_SERVER_BASE_URL}/session` )
+    fetch( `${SAMPLE_SERVER_BASE_URL}/session/${name}` )
       .then( res => res.json() )
       .then( json => {
         const { apiKey, sessionId: _sessionId, token } = json;
@@ -69,6 +90,7 @@ const init = () => {
 
         setupTextChat( session );
 
+        updateStreams( session );
         setupFeatures( { session, token } );
       } ).catch( error => {
         handleError(error);
@@ -185,7 +207,7 @@ const setupFeatures = ( args = {} ) => {
   // Receive a message and append it to the history
   const msgHistory = document.querySelector( '#history' );
   session.on( 'signal:msg', event => {
-    const msg = document.createElement( 'p' );
+    const msg = document.createElement( 'li' );
     msg.textContent = `${event.data}`;
     msg.className = event.from.connectionId === session.connection.connectionId ? 'mine' : 'theirs';
     msgHistory.appendChild( msg );

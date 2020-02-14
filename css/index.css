@@ -169,12 +169,35 @@ body, html {
   z-index: 200;
 } */
 
-#textchat {
+.side {
   position: relative;
   width: 20%;
   float: left;
   margin-left: 10px;
   height: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.streams {
+  /* position: relative; */
+  width: 100%;
+  height: 40%;
+  background-color: #333;
+  margin-bottom: 2px;
+  /* float: left; */
+  /* margin-left: 10px; */
+  /* background-color: #fff; */
+}
+
+#textchat {
+  /* position: relative;
+  width: 20%;
+  float: left;
+  margin-left: 10px;
+  height: inherit; */
+  width: 100%;
+  height: 60%;
 }
 
 #history {
@@ -192,6 +215,16 @@ body, html {
 
 #history .theirs {
   color: #00FFFF;
+}
+
+#connectionList {
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+}
+
+#connectionList .connEle {
+  color: #ffe;
 }
 
 input#msgTxt {
