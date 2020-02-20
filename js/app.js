@@ -331,11 +331,6 @@ const startBroadcast = () => {
       if ( !broadcast ) return;
       console.log( `Successfully started broadcast - data returned: ${broadcast.id}` );
       broadcastId = broadcast.id;
-      broadcastUrl = `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/view`;
-
-      const broadcastLink = document.querySelector( "#broadcastLink" );
-      broadcastLink.href = broadcastUrl;
-      broadcastLink.textContent = `${broadcastUrl}`;
     } ).catch( error => {
       handleError(error);
       console.log( 'No streams in session now' );
