@@ -8,16 +8,19 @@
     <script src="https://static.opentok.com/v2/js/opentok.min.js"></script>
 
     <!-- Polyfill for fetch API so that we can fetch the sessionId and token in IE11 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/5.10.2/alt/video-js-cdn.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/5.10.2/video.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/3.0.2/videojs-contrib-hls.js"></script>
   </head>
 
   <body>
     <div class="login-container">
       <h1>Welcome to the Video Chat App</h1>
       <span>
-        How would you like to join the session? (As a <strong><i>Host</i></strong>, as a <strong><i>Guest</i></strong>, as a <strong><i>Viewer</i></strong>)
+        How would you like to join the session? (As a <strong><i>Host</i></strong>, as a <strong><i>Guest</i></strong>, as a <strong><i>Viewer</i></strong>, as a <strong><i>Broadcast Viewer</i></strong>)
       </span>
       <span>Default selection is: <strong><i>Host</i></strong></span>
       <br />
@@ -34,6 +37,7 @@
               <option>Host</option>
               <option>Guest</option>
               <option>Viewer</option>
+              <option>Broadcast Viewer</option>
             </select>
           </span>
         </div>
@@ -69,6 +73,7 @@
         <div id="broadcastButtons">
           <button type="button" id="bStart" onClick="javascript:startBroadcast()" class="button">Start Broadcast</button>
           <button type="button" id="bStop" onClick="javascript:stopBroadcast()" class="button" disabled>Stop Broadcast</button>
+          <a id="broadcastLink"></a>
         </div>
         <div id="publisherButtons">
           <button type="button" id="pShow" onClick="javascript:showPublisher()" class="button" disabled>Show Publisher</button>
@@ -78,6 +83,16 @@
           <button type="button" id="startAudio" onClick="javascript:startPublishingAudio()" class="button" disabled>Start Audio</button>
           <button type="button" id="stopAudio" onClick="javascript:stopPublishingAudio()" class="button">Stop Audio</button>
         </div>
+      </div>
+    </div>
+    <div class="broadcast-container hide">
+      <div id="banner" class="banner">
+        <span id="bannerText" class="text">Waiting for Broadcast to Begin</span>
+      </div>
+      <div id="videoContainer" class="video-container player">
+        <video id="video" width="100%" height="100%" preload="none" controls crossorigin="true" class="video-container video-js vjs-default-skin">
+          <source id="videoSrc" src="" type="application/x-mpegURL">
+        </video>
       </div>
     </div>
 

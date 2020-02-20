@@ -1,5 +1,7 @@
 let archiveId;
 let sessionId;
+let broadcastId;
+let broadcastUrl = "";
 let role;
 let name = 'Unnamed';
 let publisher;
@@ -16,11 +18,16 @@ const onSubmit = () => {
   name = document.querySelector( '#name' ).value || 'Unnamed';
 
   const login = document.querySelector( '.login-container' );
-  login.classList.add( 'hide' );
-  const home = document.querySelector( '.home-container' );
-  home.classList.remove( 'hide' );
+  login.style.display = "none"; // .classList.add( 'hide' );
+  if ( role === 'Broadcast Viewer' ) {
+    const broadcast = document.querySelector( '.broadcast-container' );
+    broadcast.classList.remove( 'hide' );
+  } else {
+    const home = document.querySelector( '.home-container' );
+    home.classList.remove( 'hide' );
+  }
   // Run init()
-  init();
+  init( role );
 }
 
 const setupTextChat = session => {
@@ -67,36 +74,64 @@ updateStreams = session => {
   } );
 }
 
-const init = () => {
+const init = role => {
 
-  // Set initial states for archiving buttons
-  document.querySelector( '#start' ).disabled = false;
-  document.querySelector( '#view' ).disabled = true;
-  document.querySelector( '#stop' ).disabled = true;
-  archiveId = null;
+  if ( role === "Broadcast Viewer" ) {
+    if ( SAMPLE_SERVER_BASE_URL ) {
+      fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/id` )
+        .then( res => res.json() )
+        .then( json => {
+          const { broadcastId } = json;
 
-  // Get apiKey, sessionId, token info and initialize session
-  if ( SAMPLE_SERVER_BASE_URL ) {
-    fetch( `${SAMPLE_SERVER_BASE_URL}/session/${name}` )
-      .then( res => res.json() )
-      .then( json => {
-        const { apiKey, sessionId: _sessionId, token } = json;
+          fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/view` )
+            .then( res => res.json() )
+            .then( json => {
+              const banner = document.querySelector( '#banner' );
+              banner.style.display = "none";
 
-        if ( !apiKey || !_sessionId && !token ) return;
+              const videoSrc = document.querySelector( '#videoSrc' );
+              videoSrc.src = json.broadcastUrls.hls;
 
-        sessionId = _sessionId;
+              const ply = videojs( "video" );
+              ply.play();
+            } )
+        } ).catch( error => {
+          handleError(error);
+          alert('Failed to get broadcast id');
+        }
+      );
+    }
+  } else {
+    // Set initial states for archiving buttons
+    document.querySelector( '#start' ).disabled = false;
+    document.querySelector( '#view' ).disabled = true;
+    document.querySelector( '#stop' ).disabled = true;
+    archiveId = null;
 
-        const session = OT.initSession( apiKey, sessionId );
+    // Get apiKey, sessionId, token info and initialize session
+    if ( SAMPLE_SERVER_BASE_URL ) {
+      fetch( `${SAMPLE_SERVER_BASE_URL}/session/${name}` )
+        .then( res => res.json() )
+        .then( json => {
+          const { apiKey, sessionId: _sessionId, token } = json;
 
-        setupTextChat( session );
+          if ( !apiKey || !_sessionId && !token ) return;
 
-        updateStreams( session );
-        setupFeatures( { session, token } );
-      } ).catch( error => {
-        handleError(error);
-        alert('Failed to get opentok sessionId and token. Make sure you have updated the config.js file.');
-      }
-    );
+          sessionId = _sessionId;
+
+          const session = OT.initSession( apiKey, sessionId );
+
+          setupTextChat( session );
+
+          updateStreams( session );
+
+          setupFeatures( { session, token } );
+        } ).catch( error => {
+          handleError(error);
+          alert('Failed to get opentok sessionId and token. Make sure you have updated the config.js file.');
+        }
+      );
+    }
   }
 }
 
@@ -174,7 +209,7 @@ const setupFeatures = ( args = {} ) => {
     const p = document.querySelector( '#publisher' );
     p.classList.remove( 'hide' );
     publisher = OT.initPublisher( 'publisher', publisherOptions, handleError );
-    window.__publisher = publisher;
+
     // Connect to the session
     session.connect( token, error => {
       if ( error ) {
@@ -274,16 +309,55 @@ const viewArchive = () => {
 }
 
 const startBroadcast = () => {
-  stopArchive();
+  if ( archiveId ) stopArchive();
+
   document.querySelector( '#view' ).disabled = true;
 
   document.querySelector( '#bStart' ).disabled = true;
   document.querySelector( '#bStop' ).disabled = false;
+
+  fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/start`, {
+    method: 'POST',
+    mode: 'cors',
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    redirect: 'follow',
+    referrerPolicy: 'no-referrer',
+    body: JSON.stringify( { sessionId } ),
+  } ).then( res => res.json() )
+    .then( broadcast => {
+      if ( !broadcast ) return;
+      console.log( `Successfully started broadcast - data returned: ${broadcast.id}` );
+      broadcastId = broadcast.id;
+      broadcastUrl = `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/view`;
+
+      const broadcastLink = document.querySelector( "#broadcastLink" );
+      broadcastLink.href = broadcastUrl;
+      broadcastLink.textContent = `${broadcastUrl}`;
+    } ).catch( error => {
+      handleError(error);
+      console.log( 'No streams in session now' );
+    }
+  );
 }
 
 const stopBroadcast = () => {
   document.querySelector( '#bStart' ).disabled = false;
   document.querySelector( '#bStop' ).disabled = true;
+
+  fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/stop` )
+    .then( res => res.json() )
+    .then( data => {
+      console.log( `Successfully stopped broadcast - data returned: ${data}` );
+      broadcastId = undefined;
+      const broadcastLink = document.querySelector( "#broadcastLink" );
+      broadcastLink.href = "";
+      broadcastLink.textContent = "";
+    } ).catch( err => {
+      console.log( `Error calling stopBroadcast - message: ${err}` );
+    } );
 }
 
 const showPublisher = () => {
