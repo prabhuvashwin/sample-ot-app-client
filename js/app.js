@@ -161,29 +161,41 @@ const init = role => {
         .then( json => {
           const { broadcastId } = json;
 
-          fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/view` )
-            .then( res => res.json() )
-            .then( json => {
-              const banner = document.querySelector( '#banner' );
-              banner.style.display = "none";
+          if ( broadcastId ) {
+            fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/view` )
+              .then( res => res.json() )
+              .then( json => {
+                const banner = document.querySelector( '#banner' );
+                banner.style.display = "none";
 
-              const videoSrc = document.querySelector( '#videoSrc' );
-              videoSrc.src = json.broadcastUrls.hls;
+                const videoContainer = document.querySelector( '#videoContainer' );
+                videoContainer.style.display = "block";
 
-              const ply = videojs( "video" );
-              ply.play();
-            } )
+                const videoSrc = document.querySelector( '#videoSrc' );
+                videoSrc.src = json.broadcastUrls.hls;
+
+                const ply = videojs( "video" );
+                ply.play();
+              } );
+          } else {
+            alert( 'No one is broadcasting at the moment. Please refresh page after few mins.' );
+          }
         } ).catch( error => {
           handleError(error);
           alert('Failed to get broadcast id');
-        }
-      );
+      } );
     }
   } else {
     // Set initial states for archiving buttons
     document.querySelector( '#start' ).disabled = false;
     document.querySelector( '#view' ).disabled = true;
     document.querySelector( '#stop' ).disabled = true;
+
+    // Disabling broadcast options for a Viewer
+    if ( role === 'Viewer' ) {
+      document.querySelector( '#bStart' ).disabled = true;
+      document.querySelector( '#bStop' ).disabled = true;
+    }
     archiveId = null;
 
     // Get apiKey, sessionId, token info and initialize session
@@ -242,7 +254,7 @@ const setupFeatures = ( args = {} ) => {
       width: '100%',
       height: '100%',
       mirror: true,
-      name,
+      name: `${name} (${role})`,
     };
     const p = document.querySelector( '#publisher' );
     p.classList.remove( 'hide' );
