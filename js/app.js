@@ -1,7 +1,6 @@
 let archiveId;
+let archiveStatus = false;
 let sessionId;
-let broadcastId;
-let broadcastUrl = "";
 let role;
 let name = 'Unnamed';
 let publisher;
@@ -18,7 +17,7 @@ const onSubmit = () => {
   name = document.querySelector( '#name' ).value || 'Unnamed';
 
   const login = document.querySelector( '.login-container' );
-  login.style.display = "none"; // .classList.add( 'hide' );
+  login.style.display = "none";
   if ( role === 'Broadcast Viewer' ) {
     const broadcast = document.querySelector( '.broadcast-container' );
     broadcast.classList.remove( 'hide' );
@@ -26,12 +25,11 @@ const onSubmit = () => {
     const home = document.querySelector( '.home-container' );
     home.classList.remove( 'hide' );
   }
-  // Run init()
+
   init( role );
 }
 
 const setupTextChat = session => {
-  // =============== Setup text chat ===============
   const form = document.querySelector( 'form' );
   const msgTxt = document.querySelector( '#msgTxt' );
 
@@ -50,11 +48,31 @@ const setupTextChat = session => {
       }
     } );
   } );
-  // =============== Setup text chat ===============
 }
 
-updateStreams = session => {
+changeBroadcastStatus = cb => {
+  fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/id` )
+    .then( res => res.json() )
+    .then( json => {
+      cb && cb( json );
+    } )
+    .catch( error => {
+      handleError(error);
+      alert('Failed to get broadcast id');
+    } );
+}
+
+updateStreams = ( session, layout ) => {
   const connectionList = document.querySelector( '#connectionList' );
+  // Receive a message and append it to the connectionList
+  session.on( 'signal:broadcast', event => {
+    const conn = document.createElement( 'span' );
+    conn.textContent = `${event.data}`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+
   session.on( 'connectionCreated', event => {
     const { connections } = event;
     const conn = document.createElement( 'span' );
@@ -71,6 +89,66 @@ updateStreams = session => {
     conn.className = 'connEle';
     connectionList.appendChild( conn );
     conn.scrollIntoView();
+  } );
+
+  // Subscribe to a newly created stream
+  session.on( 'streamCreated', event => {
+    const subscriberOptions = {
+      insertMode: 'append',
+      width: '100%',
+      height: '100%'
+    };
+    session.subscribe( event.stream, 'subscriber', subscriberOptions, handleError );
+    layout();
+  } );
+
+  // Start the archive
+  session.on( 'archiveStarted', event => {
+    archiveId = event.id;
+    archiveStatus = true;
+    console.log( `Archive started: ${archiveId}` );
+    document.querySelector( '#stop' ).disabled = false;
+    document.querySelector( '#start' ).disabled = true;
+    document.querySelector( '#view' ).disabled = true;
+    const conn = document.createElement( 'span' );
+    conn.textContent = `Archive started with id: ${archiveId}`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+
+  // Stop the archive
+  session.on( 'archiveStopped', event => {
+    archiveId = event.id;
+    archiveStatus = false;
+    console.log( `Archive stopped: ${archiveId}` );
+    document.querySelector( '#start' ).disabled = false;
+    document.querySelector( '#stop' ).disabled = true;
+    document.querySelector( '#view' ).disabled = false;
+    const conn = document.createElement( 'span' );
+    conn.textContent = `Archive stopped with id: ${archiveId}`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+
+  session.on( 'sessionDisconnected', event => {
+    console.log( `You were disconnected from the session: ${event.reason}` );
+    const conn = document.createElement( 'span' );
+    conn.textContent = `${name} disconnected from the session`;
+    conn.className = 'connEle';
+    connectionList.appendChild( conn );
+    conn.scrollIntoView();
+  } );
+
+  // Receive a message and append it to the history
+  const msgHistory = document.querySelector( '#history' );
+  session.on( 'signal:msg', event => {
+    const msg = document.createElement( 'li' );
+    msg.textContent = `${event.data}`;
+    msg.className = event.from.connectionId === session.connection.connectionId ? 'mine' : 'theirs';
+    msgHistory.appendChild( msg );
+    msg.scrollIntoView();
   } );
 }
 
@@ -123,8 +201,6 @@ const init = role => {
 
           setupTextChat( session );
 
-          updateStreams( session );
-
           setupFeatures( { session, token } );
         } ).catch( error => {
           handleError(error);
@@ -142,60 +218,22 @@ const setupFeatures = ( args = {} ) => {
   const layoutContainer = document.getElementById( 'layout' );
 
   const options = {
-    maxRatio: 3/2,             // The narrowest ratio that will be used (default 2x3)
-    minRatio: 9/16,            // The widest ratio that will be used (default 16x9)
-    fixedRatio: false,         // If this is true then the aspect ratio of the video is maintained and minRatio and maxRatio are ignored (default false)
-    // alignItems: 'start',      // Can be 'start', 'center' or 'end'. Determines where to place items when on a row or column that is not full
-    // bigClass: "OT_big",        // The class to add to elements that should be sized bigger
-    // bigPercentage: 0.8,        // The maximum percentage of space the big ones should take up
-    // bigFixedRatio: false,      // fixedRatio for the big ones
-    // bigAlignItems: 'center',   // How to align the big items
-    // smallAlignItems: 'center', // How to align the small row or column of items if there is a big one
-    bigMaxRatio: 3/2,          // The narrowest ratio to use for the big elements (default 2x3)
-    bigMinRatio: 9/16,         // The widest ratio to use for the big elements (default 16x9)
-    bigFirst: true,            // Whether to place the big one in the top left (true) or bottom right
-    animate: true,             // Whether you want to animate the transitions
+    maxRatio: 3/2,
+    minRatio: 9/16,
+    fixedRatio: false,
+    bigMaxRatio: 3/2,
+    bigMinRatio: 9/16,
+    bigFirst: true,
+    animate: true,
     animateDuration: 200,
     animateEasing: "swing",
-    window: window,            // Lets you pass in your own window object which should be the same window that the element is in
-    // ignoreClass: 'OT_ignore',  // Elements with this class will be ignored and not positioned. This lets you do things like picture-in-picture
+    window,
   };
 
   // Initialize the layout container and get a reference to the layout method
   const { layout } = initLayoutContainer( layoutContainer, options );
 
-  // Subscribe to a newly created stream
-  session.on( 'streamCreated', event => {
-    const subscriberOptions = {
-      insertMode: 'append',
-      width: '100%',
-      height: '100%'
-    };
-    session.subscribe( event.stream, 'subscriber', subscriberOptions, handleError );
-    layout();
-  } );
-
-  // Start the archive
-  session.on( 'archiveStarted', event => {
-    archiveId = event.id;
-    console.log( `Archive started: ${archiveId}` );
-    document.querySelector( '#stop' ).disabled = false;
-    document.querySelector( '#start' ).disabled = true;
-    document.querySelector( '#view' ).disabled = true;
-  } );
-
-  // Stop the archive
-  session.on( 'archiveStopped', event => {
-    archiveId = event.id;
-    console.log( `Archive stopped: ${archiveId}` );
-    document.querySelector( '#start' ).disabled = false;
-    document.querySelector( '#stop' ).disabled = true;
-    document.querySelector( '#view' ).disabled = false;
-  } );
-
-  session.on( 'sessionDisconnected', event => {
-    console.log( `You were disconnected from the session: ${event.reason}` );
-  } );
+  updateStreams( session, layout );
 
   if ( role !== 'Viewer' ) {
     // initialize the publisher
@@ -239,14 +277,19 @@ const setupFeatures = ( args = {} ) => {
     } );
   }
 
-  // Receive a message and append it to the history
-  const msgHistory = document.querySelector( '#history' );
-  session.on( 'signal:msg', event => {
-    const msg = document.createElement( 'li' );
-    msg.textContent = `${event.data}`;
-    msg.className = event.from.connectionId === session.connection.connectionId ? 'mine' : 'theirs';
-    msgHistory.appendChild( msg );
-    msg.scrollIntoView();
+  const broadcastStartBtn = document.querySelector( '#bStart' );
+  const broadcastStopBtn = document.querySelector( '#bStop' );
+
+  broadcastStartBtn.addEventListener( 'click', event => {
+    event.preventDefault();
+
+    startBroadcast( session );
+  } );
+
+  broadcastStopBtn.addEventListener( 'click', event => {
+    event.preventDefault();
+
+    stopBroadcast( session );
   } );
 }
 
@@ -308,51 +351,82 @@ const viewArchive = () => {
   window.location = `${SAMPLE_SERVER_BASE_URL}/archive/${archiveId}/view`;
 }
 
-const startBroadcast = () => {
-  if ( archiveId ) stopArchive();
+const startBroadcast = session => {
+  const cb = json => {
+    const { broadcastId } = json;
 
-  document.querySelector( '#view' ).disabled = true;
+    if ( !broadcastId ) {
+      document.querySelector( '#view' ).disabled = true;
 
-  document.querySelector( '#bStart' ).disabled = true;
-  document.querySelector( '#bStop' ).disabled = false;
+      document.querySelector( '#bStart' ).disabled = true;
+      document.querySelector( '#bStop' ).disabled = false;
 
-  fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/start`, {
-    method: 'POST',
-    mode: 'cors',
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    redirect: 'follow',
-    referrerPolicy: 'no-referrer',
-    body: JSON.stringify( { sessionId } ),
-  } ).then( res => res.json() )
-    .then( broadcast => {
-      if ( !broadcast ) return;
-      console.log( `Successfully started broadcast - data returned: ${broadcast.id}` );
-      broadcastId = broadcast.id;
-    } ).catch( error => {
-      handleError(error);
-      console.log( 'No streams in session now' );
+      fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/start`, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer',
+        body: JSON.stringify( { sessionId } ),
+      } ).then( res => res.json() )
+        .then( broadcast => {
+          if ( !broadcast ) return;
+          console.log( `Successfully started broadcast - data returned: ${broadcast.id}` );
+          session && session.signal( {
+            type: 'broadcast',
+            data: `${name} started a broadcast`
+          }, error => {
+            if ( error ) {
+              console.error( `Error sending signal: ${error.name}, ${error.message}` );
+            }
+          } );
+        } ).catch( error => {
+          handleError(error);
+          console.log( 'No streams in session now' );
+        }
+      );
+    } else {
+      alert( 'A broadcast is already running. Please join as a Broadcast Viewer to view the broadcast' );
     }
-  );
+  };
+
+  changeBroadcastStatus( cb )
 }
 
-const stopBroadcast = () => {
+const stopBroadcast = session => {
   document.querySelector( '#bStart' ).disabled = false;
   document.querySelector( '#bStop' ).disabled = true;
 
-  fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/stop` )
-    .then( res => res.json() )
-    .then( data => {
-      console.log( `Successfully stopped broadcast - data returned: ${data}` );
-      broadcastId = undefined;
-      const broadcastLink = document.querySelector( "#broadcastLink" );
-      broadcastLink.href = "";
-      broadcastLink.textContent = "";
-    } ).catch( err => {
-      console.log( `Error calling stopBroadcast - message: ${err}` );
-    } );
+  const cb = json => {
+    const { broadcastId } = json;
+    if ( broadcastId ) {
+      fetch( `${SAMPLE_SERVER_BASE_URL}/broadcast/${broadcastId}/stop` )
+        .then( res => res.json() )
+        .then( data => {
+          console.log( `Successfully stopped broadcast - data returned: ${data}` );
+          const broadcastLink = document.querySelector( "#broadcastLink" );
+          broadcastLink.href = "";
+          broadcastLink.textContent = "";
+          session && session.signal( {
+            type: 'broadcast',
+            data: `${name} stopped a broadcast`
+          }, error => {
+            if ( error ) {
+              console.error( `Error sending signal: ${error.name}, ${error.message}` );
+            }
+          } );
+        } ).catch( err => {
+          console.log( `Error calling stopBroadcast - message: ${err}` );
+        } );
+    } else {
+      alert( 'No broadcast running at the moment' );
+    }
+  };
+
+  changeBroadcastStatus( cb );
 }
 
 const showPublisher = () => {
