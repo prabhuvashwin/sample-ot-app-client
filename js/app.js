@@ -192,10 +192,10 @@ const init = role => {
     document.querySelector( '#stop' ).disabled = true;
 
     // Disabling broadcast options for a Viewer
-    if ( role === 'Viewer' ) {
-      document.querySelector( '#bStart' ).disabled = true;
-      document.querySelector( '#bStop' ).disabled = true;
-    }
+    // if ( role === 'Viewer' ) {
+    //   document.querySelector( '#bStart' ).disabled = true;
+    //   document.querySelector( '#bStop' ).disabled = true;
+    // }
     archiveId = null;
 
     // Get apiKey, sessionId, token info and initialize session
@@ -247,7 +247,7 @@ const setupFeatures = ( args = {} ) => {
 
   updateStreams( session, layout );
 
-  if ( role !== 'Viewer' ) {
+  // if ( role !== 'Viewer' ) {
     // initialize the publisher
     const publisherOptions = {
       insertMode: 'append',
@@ -270,24 +270,24 @@ const setupFeatures = ( args = {} ) => {
         layout();
       }
     } );
-  }
-  else {
-    document.querySelector( '#pShow' ).disabled = true;
-    document.querySelector( '#pHide' ).disabled = true;
-    document.querySelector( '#startVideo' ).disabled = true;
-    document.querySelector( '#stopVideo' ).disabled = true;
-    document.querySelector( '#startAudio' ).disabled = true;
-    document.querySelector( '#stopAudio' ).disabled = true;
-    // Connect to the session
-    session.connect( token, error => {
-      if ( error ) {
-        handleError( error );
-      } else {
-        // If the connection is successful, publish the publisher to the session
-        layout();
-      }
-    } );
-  }
+  // }
+  // else {
+  //   document.querySelector( '#pShow' ).disabled = true;
+  //   document.querySelector( '#pHide' ).disabled = true;
+  //   document.querySelector( '#startVideo' ).disabled = true;
+  //   document.querySelector( '#stopVideo' ).disabled = true;
+  //   document.querySelector( '#startAudio' ).disabled = true;
+  //   document.querySelector( '#stopAudio' ).disabled = true;
+  //   // Connect to the session
+  //   session.connect( token, error => {
+  //     if ( error ) {
+  //       handleError( error );
+  //     } else {
+  //       // If the connection is successful, publish the publisher to the session
+  //       layout();
+  //     }
+  //   } );
+  // }
 
   const broadcastStartBtn = document.querySelector( '#bStart' );
   const broadcastStopBtn = document.querySelector( '#bStop' );
